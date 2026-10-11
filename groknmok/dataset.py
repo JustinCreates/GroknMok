@@ -17,10 +17,13 @@ Tables:
   domains              domain, platform, base_url, store_ids (comma list, the
                        snapshot's store order), currency, currency_source (the
                        snapshot's weekly currency check)
-  items                domain, product_key, variant_key, handle, url, title,
-                       display_title, variant_title, sku, price (text, as
-                       stored), status (raw), release_date, barcode, catalogue,
-                       used (1 / 0 / null), snapshot_at, snapshot_status
+  items                domain, product_key (null when it equals url, as for
+                       sitemap links), variant_key, handle, url, title,
+                       variant_title, sku, price (text, as stored), status
+                       (raw), release_date, barcode, catalogue, used (1 / 0 /
+                       null), snapshot_at, snapshot_status; no index (search
+                       scans the table) and no display title (the client
+                       derives it with rules.display_title)
 
 Items hold, per domain, the latest good snapshot's products with a newer
 --quick snapshot's products in their place, exactly as the pipeline's search
@@ -44,14 +47,12 @@ CREATE TABLE stores (
 CREATE TABLE domains (
   domain TEXT PRIMARY KEY, platform TEXT, base_url TEXT, store_ids TEXT, currency TEXT, currency_source TEXT);
 CREATE TABLE items (
-  domain TEXT, product_key TEXT, variant_key TEXT, handle TEXT, url TEXT, title TEXT, display_title TEXT,
-  variant_title TEXT, sku TEXT, price TEXT, status TEXT, release_date TEXT, barcode TEXT, catalogue TEXT,
-  used INTEGER, snapshot_at TEXT, snapshot_status TEXT,
-  PRIMARY KEY (domain, product_key, variant_key));
+  domain TEXT, product_key TEXT, variant_key TEXT, handle TEXT, url TEXT, title TEXT, variant_title TEXT,
+  sku TEXT, price TEXT, status TEXT, release_date TEXT, barcode TEXT, catalogue TEXT, used INTEGER,
+  snapshot_at TEXT, snapshot_status TEXT);
 """
-ITEM_FIELDS = ["domain", "product_key", "variant_key", "handle", "url", "title", "display_title", "variant_title",
-               "sku", "price", "status", "release_date", "barcode", "catalogue", "used", "snapshot_at",
-               "snapshot_status"]
+ITEM_FIELDS = ["domain", "product_key", "variant_key", "handle", "url", "title", "variant_title", "sku", "price",
+               "status", "release_date", "barcode", "catalogue", "used", "snapshot_at", "snapshot_status"]
 
 
 def open_dataset(core_path, catalogue_path=None):
@@ -109,8 +110,9 @@ def load_matches(conn, query, used):
     code = code_like(query)
     qcode = re.sub(r"\D", "", query) if code else ""
     domains = {}
-    for (dom, pkey, vkey, handle, url, title, _display, vtitle, sku, price, raw, rdate, barcode, cat, pused,
+    for (dom, pkey, vkey, handle, url, title, vtitle, sku, price, raw, rdate, barcode, cat, pused,
          fin, sst) in conn.execute(sql, params):
+        pkey = pkey or url
         title_ok = set(qw) <= set(words(title))
         sku_ok = code and sku and set(qw) <= set(words(sku))
         code_hit = ("catalogue number match" if code and qcode == (cat or "")
