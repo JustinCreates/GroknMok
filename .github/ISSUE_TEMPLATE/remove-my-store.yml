@@ -1,0 +1,51 @@
+name: Remove my store
+description: Ask for your store to be left out of the GroknMok dataset.
+title: "Remove my store: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This issue is public. To ask privately, contact OPTOUT_CONTACT instead.
+
+        Your store is removed from the next published dataset, within 24 hours
+        of a valid request. See [STORES.md](https://github.com/JustinCreates/GroknMok/blob/main/STORES.md)
+        for what is collected and how.
+  - type: input
+    id: website
+    attributes:
+      label: Store website
+      placeholder: https://www.example-hobbies.ca
+    validations:
+      required: true
+  - type: input
+    id: store
+    attributes:
+      label: Store name and location
+      placeholder: Example Hobbies, Windsor ON
+    validations:
+      required: true
+  - type: dropdown
+    id: scope
+    attributes:
+      label: What do you want?
+      options:
+        - Leave my store out of the dataset
+        - Leave my store out of the dataset and stop crawling my site
+    validations:
+      required: true
+  - type: textarea
+    id: confirm
+    attributes:
+      label: How can we confirm you speak for the store?
+      description: >-
+        For example, a note on your site, or an email to OPTOUT_CONTACT from an
+        address at your store's domain. Do not post private contact details here.
+    validations:
+      required: true
+  - type: checkboxes
+    id: authority
+    attributes:
+      label: Confirmation
+      options:
+        - label: I own or work for this store, or am authorised to ask on its behalf.
+          required: true
