@@ -182,3 +182,29 @@ class Fetcher:
                 continue
             return r, url
         raise requests.TooManyRedirects(url)
+
+
+class CrawlDelayFetcher(Fetcher):
+    """Fetcher that also obeys a robots.txt Crawl-delay for its token (the gap per
+    host is the larger of MIN_GAP and the delay). delay maps host -> seconds, as
+    live.confirm_domain expects."""
+
+    def __init__(self, user_agent, ua_token):
+        super().__init__(user_agent, ua_token)
+        self.delay = {}
+
+    def _load_robots(self, origin):
+        rp = super()._load_robots(origin)
+        cd = rp.crawl_delay(self.ua_token) if rp is not None else None
+        if cd:
+            self.delay[domain_key(urlsplit(origin).hostname)] = float(cd)
+        return rp
+
+    def _throttle(self, host):
+        prev = self.last.get(host)
+        if prev is None:
+            return None
+        wait = max(MIN_GAP, self.delay.get(host, 0.0)) - (time.monotonic() - prev)
+        if wait > 0:
+            time.sleep(wait)
+        return time.monotonic() - prev

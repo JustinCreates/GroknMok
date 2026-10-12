@@ -228,15 +228,15 @@ def prio(p):
     return min(rank(v) for v in p["variants"]), price
 
 
-def plan_confirm(domains, limit):
-    """Mark the products to live-confirm: per domain at most MAX_CONFIRM, best
-    snapshot status and cheapest first; across domains round-robin (every
-    domain's best product before any domain's second), at most limit.
-    Returns how many candidates the limit left out."""
+def plan_confirm(domains, limit, per_domain=MAX_CONFIRM):
+    """Mark the products to live-confirm: per domain at most per_domain (default
+    MAX_CONFIRM), best snapshot status and cheapest first; across domains
+    round-robin (every domain's best product before any domain's second), at
+    most limit. Returns how many candidates the limit left out."""
     cands = []
     for d in domains.values():
         cands += [((i,) + prio(p), d["domain"], p, d)
-                  for i, p in enumerate(sorted(d["products"].values(), key=prio)[:MAX_CONFIRM])]
+                  for i, p in enumerate(sorted(d["products"].values(), key=prio)[:per_domain])]
     cands.sort(key=lambda c: (c[0], c[1]))
     for _, _, p, d in cands[:limit]:
         p["confirm"] = True

@@ -205,8 +205,11 @@ def annotate(domains, detected, args, fx_rate):
     exclude list, display verdict, shown / hidden reason, release dates, inferred
     preorders and the in-stock-before-release note, for every variant. Shared by
     search output and watch.py. args needs no_exclude, exclude_list, barcode,
-    query, lo, hi and all. fx_rate() returns (USD/CAD rate, its date) or (None, None);
-    it is called only when a USD price is present."""
+    query, lo, hi and all; an optional snapshot_ok (the client without --live)
+    lets snapshot statuses count where live ones are otherwise required.
+    fx_rate() returns (USD/CAD rate, its date) or (None, None); it is called
+    only when a USD price is present."""
+    snapshot_ok = getattr(args, "snapshot_ok", False)
     excludes = [] if args.no_exclude else load_title_excludes(args.exclude_list)
     want_code = re.sub(r"\D", "", args.barcode or (args.query if code_like(args.query) else ""))
     for d in domains.values():
@@ -227,7 +230,7 @@ def annotate(domains, detected, args, fx_rate):
                 term = excluded_by(full_title, excludes)
                 v["listed"] = v["in_range"] and term is None  # eligible for any output, incl. --all
                 v["verdict"], v["verdict_reason"] = verdict(v, full_title)
-                live_ok = v["verdict"] in ("in_stock", "preorder") and v["status_source"] == "live"
+                live_ok = v["verdict"] in ("in_stock", "preorder") and (v["status_source"] == "live" or snapshot_ok)
                 v["shown"] = v["listed"] and (args.all or live_ok)
                 v["hidden_reason"] = (f"title excludes '{term}'" if term else reason) or ("" if v["shown"] else
                                                 f"verdict {v['verdict_reason']}" if v["verdict_reason"]
@@ -238,7 +241,7 @@ def annotate(domains, detected, args, fx_rate):
     note_release(domains)
 
 
-def print_default(domains, stores, links):
+def print_default(domains, stores, links, review_hint=" (stockcheck --currency-review)"):
     """Default output: live-confirmed in-stock results, then a Preorders section,
     each cheapest first and grouped per domain; one section per country when
     results come from more than one. Nothing else."""
@@ -301,7 +304,7 @@ def print_default(domains, stores, links):
     if any("assumed" in b[1]["currency_source"] for _, ins, pre in sections for b in ins + pre):
         print("* currency assumed: not detected for that site yet")
     if any(b[1].get("currency_mismatch") for _, ins, pre in sections for b in ins + pre):
-        print("! site currency differs from the store's country: possible wrong match (stockcheck --currency-review)")
+        print(f"! site currency differs from the store's country: possible wrong match{review_hint}")
     fx = next((b[1]["fx"] for _, ins, pre in sections for b in ins + pre if b[1].get("fx")), None)
     if fx:
         print(fx_line(fx))
@@ -317,7 +320,7 @@ def print_all(domains, stores, links, args, secs):
     n_var = sum(1 for d in kept.values() for p in d["products"].values() for v in p["variants"] if v["listed"])
     live = sum(1 for d in kept.values() for p in d["products"].values() for v in p["variants"]
                if v["listed"] and v["status_source"] == "live")
-    print(f'stockcheck "{args.query}"{rng}  ({"used included" if args.used else "used hidden"})')
+    print(f'{getattr(args, "app", "stockcheck")} "{args.query}"{rng}  ({"used included" if args.used else "used hidden"})')
     fx = next((d["fx"] for d in kept.values() if d.get("fx")), None)
     if fx:
         print(fx_line(fx))
@@ -453,7 +456,7 @@ def print_share(domains, stores, args):
         print(NO_STOCK)
         return
     stamp = datetime.now().astimezone().strftime("%Y-%m-%d %H:%M %Z")
-    head = f"**{md(args.query)}** - checked {stamp}, live-confirmed"
+    head = f"**{md(args.query)}** - checked {stamp}, " + getattr(args, "share_basis", "live-confirmed")
     fx = next((d["fx"] for d in domains.values() if d.get("fx") and d["currency"] == "USD"
                and any(v["shown"] for p in d["products"].values() for v in p["variants"])), None)
     if fx:

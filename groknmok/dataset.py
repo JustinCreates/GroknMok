@@ -119,8 +119,8 @@ def load_matches(conn, query, used):
                     else "barcode match" if code and qcode == re.sub(r"\D", "", barcode or "") else "")
         if not (title_ok or sku_ok or code_hit):
             continue
-        if pused == 1 and not used:
-            continue
+        if (pused == 1 and not used) or dom not in doms:  # a catalogue part older than core may
+            continue                                      # hold a domain core no longer lists
         _, plat, base, sids, cur, cur_src = doms[dom]
         p = None if price in (None, "") else float(price)
         d = domains.setdefault(dom, {"domain": dom, "platform": plat, "finished_at": fin, "snap_status": sst,
