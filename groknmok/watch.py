@@ -24,9 +24,9 @@ from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeou
 from datetime import datetime, timezone
 from types import SimpleNamespace
 
-from groknmok.live import CONFIRM_TIMEOUT, plan_confirm
+from groknmok.live import CONFIRM_TIMEOUT, MAX_CONFIRM, plan_confirm
 from groknmok.notify import load_config, log, send
-from groknmok.report import cad_text, display_name, keep_stores, pickup, store_lines, store_name
+from groknmok.report import cad_text, display_name, keep_stores, pickup, store_filter, store_lines, store_name
 from groknmok.rules import excluded_by, load_title_excludes, show_title, to_ascii, verdict
 
 WATCH_FIELDS = ["id", "query", "min", "max", "country", "region", "code", "active", "note", "created"]
@@ -77,6 +77,64 @@ def save_state(path, state):
     os.replace(tmp, path)
 
 
+def add_watch(watch_file, state_file, query, lo=None, hi=None, country="all", province=None, state=None,
+              code=None, note="", alert_existing=False):
+    """Append a watch to watch_file and return its id (w1, w2, ...). With
+    alert_existing its first run alerts on everything current instead of being
+    a silent baseline."""
+    countries, regions = store_filter(SimpleNamespace(country=country, province=province, state=state))
+    rows = load_watches(watch_file)
+    nid = f"w{max([int(r['id'][1:]) for r in rows if r['id'][1:].isdigit()] + [0]) + 1}"
+    rows.append({"id": nid, "query": query, "min": "" if lo is None else f"{lo:g}",
+                 "max": "" if hi is None else f"{hi:g}",
+                 "country": country if not regions else "/".join(sorted(countries)),
+                 "region": ",".join(f"{c}-{r}" for c, r in sorted(regions)),
+                 "code": re.sub(r"\D", "", code or ""), "active": "yes", "note": note,
+                 "created": datetime.now().date().isoformat()})
+    save_watches(watch_file, rows)
+    if alert_existing:  # an empty previous run: everything current counts as new
+        st = load_state(state_file)
+        st["watches"][nid] = {"hits": {}, "seen": {}, "alerted": {}}
+        save_state(state_file, st)
+    return nid
+
+
+def watch_lines(watch_file, state_file, include_paused=False):
+    """One line per watch: id, active or paused, query, range, region, code,
+    last run and last alert, note."""
+    state, out = load_state(state_file), []
+    for r in load_watches(watch_file):
+        if r["active"] == "no" and not include_paused:
+            continue
+        ws = state["watches"].get(r["id"], {})
+        rng = f" {r['min'] or ''}-{r['max'] or ''}" if r["min"] or r["max"] else ""
+        out.append(f"{r['id']:4} {'active' if r['active'] != 'no' else 'paused':6} \"{r['query']}\"{rng}"
+                   f" {r['country'] or 'all'}{(' ' + r['region']) if r['region'] else ''}"
+                   f"{(' code ' + r['code']) if r['code'] else ''}"
+                   f" | last run {ws.get('last_run', '-')} | last alert {ws.get('last_alert', '-')}"
+                   f"{(' | ' + r['note']) if r['note'] else ''}")
+    return out
+
+
+def remove_watch(watch_file, state_file, wid, pause=False):
+    """Remove a watch and its state (pause: set active=no and keep both).
+    False when there is no such watch."""
+    rows = load_watches(watch_file)
+    if not any(r["id"] == wid for r in rows):
+        return False
+    if pause:
+        for r in rows:
+            if r["id"] == wid:
+                r["active"] = "no"
+    else:
+        rows = [r for r in rows if r["id"] != wid]
+        state = load_state(state_file)
+        if state["watches"].pop(wid, None) is not None:
+            save_state(state_file, state)
+    save_watches(watch_file, rows)
+    return True
+
+
 def key_of(d, p, v):
     return f"{d['domain']}|{p['key']}|{v['key']}"
 
@@ -119,8 +177,11 @@ def run(src, mode, dry_run=False):
     """Evaluate every active watch (see the module docstring); src is the data source:
     watch_file, state_file, config, exclude_list, user_agent, app, load_stores(),
     load_matches(query), confirm_domain(d), annotate(domains, detected, args) and
-    count_requests(callback)."""
+    count_requests(callback). Optional: live (default True; False judges new hits
+    on the snapshot data alone, with no requests), confirm_cap (default
+    MAX_CONFIRM_RUN) and confirm_per_domain (default live.MAX_CONFIRM)."""
     started = time.monotonic()
+    live = getattr(src, "live", True)
     watches = [w for w in load_watches(src.watch_file) if w["active"] != "no"]
     if not watches:
         log("watch: no active watches")
@@ -164,9 +225,11 @@ def run(src, mode, dry_run=False):
                 if any(key_of(d, p, v) in newset for v in p["variants"]):
                     rd = todo.setdefault(name, dict(d, products={}))
                     rd["products"][pk] = p
-    plan_confirm(todo, MAX_CONFIRM_RUN)
+    if live:
+        plan_confirm(todo, getattr(src, "confirm_cap", MAX_CONFIRM_RUN),
+                     getattr(src, "confirm_per_domain", MAX_CONFIRM))
     timed_out, confirmed = False, 0
-    if todo:
+    if todo and live:
         pool = ThreadPoolExecutor(max_workers=16)
         futs = [pool.submit(src.confirm_domain, d) for d in todo.values()
                 if any(p.get("confirm") for p in d["products"].values())]
@@ -178,8 +241,9 @@ def run(src, mode, dry_run=False):
             log("watch: some live confirms still running; their hits stay new for the next run")
             timed_out = True
         pool.shutdown(wait=False, cancel_futures=True)
+    if todo:
         ann = SimpleNamespace(no_exclude=False, exclude_list=src.exclude_list, barcode=None, query="",
-                              lo=None, hi=None, all=False)
+                              lo=None, hi=None, all=False, snapshot_ok=not live)
         src.annotate(todo, detected, ann)
 
     total_alerts = 0
@@ -192,7 +256,7 @@ def run(src, mode, dry_run=False):
             d = todo.get(dom)
             p = (d or {}).get("products", {}).get(pk)
             v = next((x for x in (p or {}).get("variants", []) if x["key"] == vk), None)
-            if v is None or v.get("status_source") != "live":
+            if v is None or (live and v.get("status_source") != "live"):
                 unconfirmed.add(k)  # over the cap, or the confirm failed: new again next run
                 continue
             if not (v["shown"] and v["verdict"] in HIT_STATUSES and in_range(v["price"], w)):
