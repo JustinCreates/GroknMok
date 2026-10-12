@@ -6,6 +6,10 @@
   groknmok update [--force]        check for a new dataset now
   groknmok status                  dataset build, age and parts
   groknmok config [core-only on|off] [watch-live on|off]
+  groknmok watch add|list|remove|run|test   restock alerts (groknmok watch -h)
+  groknmok timer install|remove|status      hourly update and watch check
+  groknmok self-update [--check|--rollback] replace this program with the
+                                            latest signed release
   groknmok version
 
 Searches read the local copy of the published dataset, which is checked for a
@@ -227,6 +231,10 @@ def main(argv=None):
         return cmd_status(argv[1:])
     if argv[0] == "config":
         return cmd_config(argv[1:])
-    if argv[0] in COMMANDS:
-        sys.exit(f"groknmok {argv[0]}: not available yet")
+    if argv[0] in ("watch", "timer"):
+        from groknmok import watches
+        return (watches.cmd_watch if argv[0] == "watch" else watches.cmd_timer)(argv[1:])
+    if argv[0] == "self-update":
+        from groknmok import selfupdate
+        return selfupdate.cmd(argv[1:])
     return search(argv)
