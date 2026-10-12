@@ -306,7 +306,7 @@ No licence is granted for the dataset beyond that.
 ## Store owners
 
 [STORES.md](STORES.md) explains what is collected and how, and how to
-have your store left out. In short: contact OPTOUT_CONTACT or open a
+have your store left out. In short: contact groknmoksupport@gmail.com or open a
 ["Remove my store" issue](https://github.com/JustinCreates/GroknMok/issues/new?template=remove-my-store.yml).
 
 ## Licence

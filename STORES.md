@@ -7,7 +7,7 @@ about your store, how, and how to have your store left out.
 
 ## In short
 
-- **To be left out,** contact OPTOUT_CONTACT or open a
+- **To be left out,** contact groknmoksupport@gmail.com or open a
   ["Remove my store" issue](https://github.com/JustinCreates/GroknMok/issues/new?template=remove-my-store.yml).
   Your store is removed from the next published dataset, within 24 hours
   of a valid request.
@@ -92,7 +92,7 @@ products on your site before buying (`--live`):
 
 ## Asking to be left out
 
-Contact OPTOUT_CONTACT, or open a
+Contact groknmoksupport@gmail.com, or open a
 ["Remove my store" issue](https://github.com/JustinCreates/GroknMok/issues/new?template=remove-my-store.yml)
 if you are happy for the request to be public.
 
@@ -115,4 +115,4 @@ drop it at their next update.
 
 Prices and stock come from your own site at the time of the snapshot,
 and every result shows how old its snapshot is. If something is shown
-wrongly, contact OPTOUT_CONTACT or open an issue.
+wrongly, contact groknmoksupport@gmail.com or open an issue.
