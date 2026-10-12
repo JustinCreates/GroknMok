@@ -160,6 +160,8 @@ def search(argv):
     sys.stdout.flush()
     if unfinished:
         os._exit(0)  # a confirm thread may still be sleeping on a throttle; do not wait for it
+    from groknmok import selfupdate
+    selfupdate.interactive_notice(p)  # at most daily, terminal only
     return 0
 
 
