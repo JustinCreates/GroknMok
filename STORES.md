@@ -1,7 +1,7 @@
 # For store owners
 
 GroknMok helps hobby gamers find Games Workshop products in stock at
-independent stores. It is a free, independent project, not affiliated
+independent stores. It is an independent project, not affiliated
 with Games Workshop or any store. This page explains what it collects
 about your store, how, and how to have your store left out.
 
@@ -9,7 +9,7 @@ about your store, how, and how to have your store left out.
 
 - **To be left out,** contact groknmoksupport@gmail.com or open a
   ["Remove my store" issue](https://github.com/JustinCreates/GroknMok/issues/new?template=remove-my-store.yml).
-  Your store is removed from the published dataset within 3 business
+  Your store is removed from GroknMok's dataset within 3 business
   days of a valid request.
 - **To stop the crawler visiting your site,** add this to your
   robots.txt:
@@ -21,7 +21,7 @@ about your store, how, and how to have your store left out.
 
   That stops the visits. The crawler re-reads robots.txt about once a
   day, and a store whose robots.txt blocks it is also left out of the
-  published dataset from then on.
+  dataset from then on.
 
 ## Which stores are included
 
@@ -44,7 +44,7 @@ product:
 - the barcode or GW catalogue number, if your site exposes one;
 - the link to the product page.
 
-## What is published
+## What GroknMok shows
 
 For each store:
 
@@ -54,7 +54,7 @@ For each store:
 - the currency of its site;
 - the product facts above.
 
-Not published: street addresses, phone numbers, email addresses,
+Never shown: street addresses, phone numbers, email addresses,
 product descriptions or images.
 
 The dataset may be used only with GroknMok. No licence to redistribute
@@ -108,7 +108,7 @@ Please include:
 - **how we can confirm you speak for the store:** for example, write
   from an address at your store's domain.
 
-**What happens next:** your store is removed from the published dataset
+**What happens next:** your store is removed from GroknMok's dataset
 within 3 business days of a valid request. GroknMok users' copies drop it
 at their next update.
 

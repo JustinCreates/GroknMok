@@ -7,7 +7,7 @@ body:
       value: |
         This issue is public. To ask privately, contact groknmoksupport@gmail.com instead.
 
-        Your store is removed from the published dataset within 3 business days
+        Your store is removed from GroknMok's dataset within 3 business days
         of a valid request. See [STORES.md](https://github.com/JustinCreates/GroknMok/blob/main/STORES.md)
         for what is collected and how.
   - type: input
