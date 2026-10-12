@@ -9,8 +9,8 @@ about your store, how, and how to have your store left out.
 
 - **To be left out,** contact groknmoksupport@gmail.com or open a
   ["Remove my store" issue](https://github.com/JustinCreates/GroknMok/issues/new?template=remove-my-store.yml).
-  Your store is removed from the next published dataset, within 24 hours
-  of a valid request.
+  Your store is removed from the published dataset within 3 business
+  days of a valid request.
 - **To stop the crawler visiting your site,** add this to your
   robots.txt:
 
@@ -19,14 +19,15 @@ about your store, how, and how to have your store left out.
   Disallow: /
   ```
 
-  That stops the visits. It does not remove the data already collected,
-  so contact us as well if you want that gone.
+  That stops the visits. The crawler re-reads robots.txt about once a
+  day, and a store whose robots.txt blocks it is also left out of the
+  published dataset from then on.
 
 ## Which stores are included
 
 Independent stores in Canada and the United States that carry Games
-Workshop products and have a website. They were found through public
-store listings, mainly Games Workshop's store finder. Stores sharing one
+Workshop products and have a website. They were found from public
+listings of Warhammer stockists. Stores sharing one
 website are treated as one online shop, with their locations listed
 beneath it.
 
@@ -107,9 +108,9 @@ Please include:
 - **how we can confirm you speak for the store:** for example, write
   from an address at your store's domain.
 
-**What happens next:** your store is removed from the next published
-dataset, within 24 hours of a valid request. GroknMok users' copies
-drop it at their next update.
+**What happens next:** your store is removed from the published dataset
+within 3 business days of a valid request. GroknMok users' copies drop it
+at their next update.
 
 ## Corrections
 
