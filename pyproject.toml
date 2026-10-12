@@ -1,7 +1,0 @@
-[project]
-name = "groknmok"
-version = "0.1.0"
-description = "Search independent hobby stores' published stock data, offline, with optional live confirm and restock alerts."
-readme = "README.md"
-requires-python = ">=3.10"
-dependencies = ["requests", "protego"]

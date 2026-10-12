@@ -1,7 +1,8 @@
 # GroknMok
 
-GroknMok is a small command-line program that searches the online stock of
-independent Canadian and US hobby stores for Games Workshop products.
+GroknMok is a small program that searches the online stock of independent
+Canadian and US hobby stores for Games Workshop products. It runs in its
+own window (`groknmok gui`) or at the command line.
 
 It works from a published dataset: snapshots of the Games Workshop
 catalogues of about 1,300 independent stores (about 1,200 websites), taken
@@ -10,7 +11,7 @@ dataset, keeps it current, and searches it on your own machine. It can
 also:
 
 - re-check matches on the stores' own sites (`--live`);
-- format results for Discord or Reddit (`--share`);
+- format results for WhatsApp, Discord, a Facebook group or Reddit (`--share`);
 - send you restock alerts through ntfy (`groknmok watch`).
 
 It uses no AI and no account, and it sends nothing about your searches
@@ -56,11 +57,64 @@ Nothing is installed outside your home directory. To uninstall:
 
 ```bash
 groknmok timer remove        # only if you installed the timer
+groknmok gui --remove-desktop  # only if you added it to the menu
 rm ~/.local/bin/groknmok
 rm -r ~/.config/groknmok ~/.local/share/groknmok
 ```
 
-## Search
+## The window
+
+```bash
+groknmok gui                    # open the Grokn' Mok! terminal
+```
+
+The first time it opens (from `~/.local/bin/groknmok`, or wherever you put
+groknmok.pyz), it adds **Grokn' Mok!** with its icon to your applications
+menu. From then on, open it from the menu, pin it to your dock if you like,
+and close it with its close button: closing the window ends the program.
+`groknmok gui --remove-desktop` takes the entry out and keeps it out;
+`groknmok gui --install-desktop` puts it back, pointing at the program you
+run it with.
+
+The window has three tabs:
+
+- **Search.** Type a product name or catalogue number and press Enter or
+  SCAN; CLEAR (or Esc) empties the query and the results. Pick CA or US (the stores cannot ship GW products across the
+  border), optionally provinces or states (`ON,QC`) and a price range.
+  Each result shows the price, the store and its location, the status and
+  how old the snapshot is. The column beside OPEN shows the price in the
+  other currency for comparison: USD for Canadian stores, CAD for US
+  stores, at the Bank of Canada rate in the dataset. VERIFY LIVE
+  re-checks the matches on the stores' own sites. The COPY buttons put a
+  ready-to-paste post on the clipboard for WhatsApp, Discord or a
+  Facebook group; a long Discord post is split into messages, one per
+  press. + WATCH THIS SEARCH turns the search into a restock watch.
+- **Watches.** Your watches, with pause, resume and remove; ntfy setup
+  and a test alert; the hourly timer on or off.
+- **Status.** The dataset build, its parts and age, the program version,
+  update and core-only settings, and the display: phosphor colour, glow,
+  grime and scanlines.
+
+How the window opens, in this order of preference
+(`groknmok gui --check` says which this system has):
+
+1. **Frameless.** The casing is the whole window, with its own minimize,
+   maximize and close buttons; drag it by the nameplate and resize it
+   from its edges. This needs GTK 3 with WebKit2GTK and PyGObject in the
+   system Python (`python3 -c "import gi"`), or
+   [pywebview](https://pywebview.flowrl.com/).
+2. **App window.** Chrome, Chromium, Brave, Edge or Vivaldi, installed or
+   as a flatpak, in app mode with its own profile and your system's title
+   bar.
+3. **Browser tab.** Your default browser.
+
+`--window app` or `--window browser` picks one. The window talks to the
+program over 127.0.0.1 only, at an address with a random secret in it,
+and the program stops shortly after the window closes. The fonts (VT323,
+Share Tech Mono, Black Ops One, Creepster) are built in, under the SIL
+Open Font License, so nothing is fetched from the web for the window.
+
+## Search at the command line
 
 ```bash
 groknmok "telemon"
@@ -116,12 +170,14 @@ daily rate included in the dataset.
 
 ```bash
 groknmok "telemon" --share            # Discord: messages of at most 2,000 characters
+groknmok "telemon" --share whatsapp   # WhatsApp: *bold* heading, the link under each line
+groknmok "telemon" --share fb         # a Facebook group: plain text, the link under each line
 groknmok "telemon" --share reddit     # Reddit: posts of at most 10,000 characters
 groknmok "telemon" --share --top 5    # every in-stock result, only the 5 cheapest preorders
 ```
 
-`--share` prints only a Markdown list, ready to paste: product link,
-store, location, price and status. Its heading says whether the results
+`--share` prints only a list, ready to paste: product, store, location,
+price, status and link (Markdown links for Discord and Reddit). Its heading says whether the results
 come from the snapshot or were live-confirmed. It ends with "Always check
 the store page before buying."
 
@@ -247,6 +303,7 @@ groknmok status            # dataset build, age, parts, settings
 groknmok config            # show settings
 groknmok config core-only on|off
 groknmok config watch-live on|off
+groknmok gui --check       # which kinds of window this system can open
 groknmok version
 groknmok -h                # every search option
 ```
@@ -259,7 +316,8 @@ groknmok -h                # every search option
 | `~/.config/groknmok/client.json` | settings |
 | `~/.config/groknmok/watch.csv` | your watches |
 | `~/.config/groknmok/ntfy.conf` | ntfy settings (0600) |
-| `~/.local/share/groknmok/` | the dataset, update state, watch state, the previous program |
+| `~/.config/groknmok/gui.json` | the window's display settings and last country |
+| `~/.local/share/groknmok/` | the dataset, update state, watch state, the previous program, the app window's browser profile |
 
 `GROKNMOK_CONFIG_DIR` and `GROKNMOK_DATA_DIR` override the two directories.
 
@@ -311,8 +369,12 @@ have your store left out. In short: contact groknmoksupport@gmail.com or open a
 
 ## Licence
 
-The program's code is under the Apache License 2.0, see [LICENSE](LICENSE).
-The dataset is not covered by it: see "Dataset notice" above.
+GroknMok is free to use, but it is not open source: version 0.2.0 and
+later are under the GroknMok Licence, see [LICENSE](LICENSE). In short:
+use it as much as you like on your own computers; do not redistribute,
+sell or modify it. The dataset is for use with GroknMok only: see
+"Dataset notice" above. Source code of version 0.1.0 and earlier that was
+published under the Apache License 2.0 stays under that licence.
 
 Games Workshop, Warhammer, Citadel and Forge World are trademarks of
 Games Workshop Limited. GroknMok is an independent project, not
