@@ -78,9 +78,8 @@ it is granted. Product facts belong to the stores.
   WooCommerce Store API, Lightspeed's JSON pages, or your sitemap). It
   never logs in, adds to a cart or places orders.
 - **Schedule:**
-  - the Games Workshop catalogue, once a night;
-  - the newest products and preorders, every 3 hours (one or a few
-    requests);
+  - the Games Workshop catalogue, two days a week (Monday and Thursday),
+    spread over the day;
   - sitemap-only sites, once a week.
 
 **GroknMok users** can ask the program to re-check a few matched
